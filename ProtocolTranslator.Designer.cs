@@ -94,7 +94,6 @@
             // 
             // LogForm
             // 
-            this.LogForm.Enabled = false;
             this.LogForm.Location = new System.Drawing.Point(23, 9);
             this.LogForm.Multiline = true;
             this.LogForm.Name = "LogForm";
@@ -102,7 +101,6 @@
             this.LogForm.Size = new System.Drawing.Size(705, 303);
             this.LogForm.TabIndex = 9;
             this.LogForm.TabStop = false;
-            this.LogForm.Visible = false;
             // 
             // label1
             // 
@@ -121,14 +119,12 @@
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.textBox1);
             this.groupBox1.Controls.Add(this.textBox3);
-            this.groupBox1.Enabled = false;
             this.groupBox1.Location = new System.Drawing.Point(23, 318);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(268, 67);
             this.groupBox1.TabIndex = 14;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "groupBox1";
-            this.groupBox1.Visible = false;
             // 
             // groupBox2
             // 
@@ -138,14 +134,12 @@
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.textBox2);
             this.groupBox2.Controls.Add(this.textBox4);
-            this.groupBox2.Enabled = false;
             this.groupBox2.Location = new System.Drawing.Point(297, 318);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(268, 67);
             this.groupBox2.TabIndex = 15;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "groupBox2";
-            this.groupBox2.Visible = false;
             // 
             // radioButton2
             // 
