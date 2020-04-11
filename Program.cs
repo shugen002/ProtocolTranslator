@@ -17,12 +17,12 @@ namespace ProtocolTranslator
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new ProtocolTranslator());
         }
 
-        static void log(string level, string message)
+        public static void log(string level, string message)
         {
-            Console.WriteLine(String.Format("[{0}]{1}", level, message));
+            Console.WriteLine(string.Format("[{0}]{1}", level, message));
             LogEventArgs temp = new LogEventArgs {
                 level = level,
                 message = message
