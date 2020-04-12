@@ -23,7 +23,7 @@ namespace ProtocolTranslator
         }
         protected override void OnOpen()
         {
-            Program.log("info", Context.UserEndPoint.ToString() + " Connected");
+            Program.log("INFO", Context.UserEndPoint.ToString() + " Connected");
             ws = new WebSocket(ServerController.url);
             ws.OnClose += OnWSClose;
             ws.OnOpen += OnWSOpen;
@@ -34,31 +34,29 @@ namespace ProtocolTranslator
 
         private void OnWSMessage(object sender, MessageEventArgs e)
         {
-            Program.log("info", "WS Received " + e.RawData.Length);
+            Program.log("INFO", Context.UserEndPoint.ToString() + " Received " + e.RawData.Length + " Bytes from Remote");
             packetHandler(e.RawData);
         }
 
         private void packetHandler(Byte[] bytes)
         {
             Byte[][] packets = GoIMProtocol.Cut(bytes);
+            Program.log("INFO", Context.UserEndPoint.ToString() + " Received " + packets.Length + " Packets from Remote");
             foreach (Byte[] packet in packets)
             {
                 GoIMMessage data = GoIMProtocol.Decode(packet);
                 if (data.operation == GoIMProtocol.WS_OP_MESSAGE && data.protocolVersion == 2)
                 {
+                    Program.log("INFO", Context.UserEndPoint.ToString() + " Received Compressed Packets from Remote");
                     var rawStream = new MemoryStream(data.Body, 2, data.Body.Length - 2);
                     DeflateStream deflateStream = new DeflateStream(rawStream, CompressionMode.Decompress);
                     MemoryStream memoryStream = new MemoryStream();
                     deflateStream.CopyTo(memoryStream);
-
-                    Byte[][] decompressedPackets = GoIMProtocol.Cut(memoryStream.GetBuffer());
-                    foreach (byte[] decompressedPacket in decompressedPackets)
-                    {
-                        packetHandler(decompressedPacket);
-                    }
+                    packetHandler(memoryStream.GetBuffer());
                 }
                 else
                 {
+                    Program.log("INFO", Context.UserEndPoint.ToString() + " Sending " + packet.Length + " Bytes to Local.");
                     Send(packet);
                 }
             }
@@ -66,18 +64,20 @@ namespace ProtocolTranslator
 
         private void OnWSError(object sender, WebSocketSharp.ErrorEventArgs e)
         {
-            Program.log("Error", e.ToString());
+            Program.log("ERROR", Context.UserEndPoint.ToString() + " Remote Side Error :" + e.ToString());
             SafeCloseLocal();
             SafeCloseRemote();
         }
 
         private void OnWSOpen(object sender, EventArgs e)
         {
+            Program.log("INFO", Context.UserEndPoint.ToString() + " Remote Side Open");
             connected = true;
             if (cache.Count > 0)
             {
                 foreach (byte[] item in cache)
                 {
+                    Program.log("INFO", Context.UserEndPoint.ToString() + " Sending " + item.Length + " to Remote.");
                     ws.Send(item);
                 }
             }
@@ -85,17 +85,21 @@ namespace ProtocolTranslator
 
         private void OnWSClose(object sender, CloseEventArgs e)
         {
-            SafeCloseLocal();
+            Program.log("INFO", Context.UserEndPoint.ToString() + " Remote Side Closed. Code: " + e.Code + " Reason:" + e.Reason);
+            SafeCloseLocal(e.Code, e.Reason);
         }
 
         protected override void OnMessage(MessageEventArgs e)
         {
+            Program.log("INFO", Context.UserEndPoint.ToString() + " Received " + e.RawData.Length + " Bytes from Local");
             byte[][] packets = GoIMProtocol.Cut(e.RawData);
+            Program.log("INFO", Context.UserEndPoint.ToString() + " Received " + packets.Length + " Packets from Local");
             foreach (byte[] packet in packets)
             {
                 GoIMMessage data = GoIMProtocol.Decode(e.RawData);
                 if (data.operation == GoIMProtocol.WS_OP_USER_AUTHENTICATION)
                 {
+
                     var authInfo = JObject.Parse(Encoding.UTF8.GetString(data.Body));
                     if (!authInfo.ContainsKey("protover"))
                     {
@@ -109,7 +113,9 @@ namespace ProtocolTranslator
                     }
                     if (connected)
                     {
-                        ws.Send(GoIMProtocol.Encode(data));
+                        var newpacket = GoIMProtocol.Encode(data);
+                        Program.log("INFO", Context.UserEndPoint.ToString() + " Sending " + newpacket.Length + " Bytes to Remote.");
+                        ws.Send(newpacket);
 
                     }
                     else
@@ -121,6 +127,7 @@ namespace ProtocolTranslator
                 {
                     if (connected)
                     {
+                        Program.log("INFO", Context.UserEndPoint.ToString() + " Sending " + packet.Length + " Bytes to Remote.");
                         ws.Send(packet);
                     }
                     else
@@ -132,11 +139,12 @@ namespace ProtocolTranslator
         }
         protected override void OnClose(CloseEventArgs e)
         {
+            Program.log("INFO", Context.UserEndPoint.ToString() + " Local Side Closed. Code: " + e.Code + " Reason:" + e.Reason);
             SafeCloseRemote();
         }
         protected override void OnError(WebSocketSharp.ErrorEventArgs e)
         {
-            Program.log("Error", e.ToString());
+            Program.log("ERROR", Context.UserEndPoint.ToString() + " Local Side Error :" + e.ToString());
             SafeCloseLocal();
             SafeCloseRemote();
         }
@@ -147,7 +155,7 @@ namespace ProtocolTranslator
                 ws.Close();
             }
         }
-        protected void SafeCloseLocal()
+        protected void SafeCloseLocal(ushort code = 1011, string reason = "Unknown Error")
         {
             if (Context.WebSocket.IsAlive)
             {
