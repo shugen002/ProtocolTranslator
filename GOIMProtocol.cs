@@ -47,6 +47,7 @@ namespace ProtocolTranslator
                 {
                     Array.Reverse(data, WS_PACKAGE_OFFSET + pointer, 4);
                 }
+                if (packageLength == 0) break;
                 result.Add(data.Skip(pointer).Take(packageLength).ToArray());
                 pointer += packageLength;
             };
